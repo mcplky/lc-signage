@@ -1,0 +1,10 @@
+[Unit]
+Description=Library Calendar Room Display Backend Service
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+ExecStart=~/.cargo/bin/lc-signage
+
+[Install]
+WantedBy=default.target
