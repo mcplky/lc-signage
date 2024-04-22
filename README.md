@@ -34,7 +34,7 @@ You will need to ensure that you maintain a login on the server you install this
 
 ## Configuration
 
-`lc-signage` is configured through `config.toml` located by default in your user directory at `~/.config/lc-signage/config.toml`. Currently this is the only supported location to configure this service.
+`lc-signage` is configured through a `config.toml` located by default in your user directory at `~/.config/lc-signage/config.toml`. Currently this is the only supported location to configure this service.
 
 ```toml
 auth_url = "https://<your library url>/oauth/authorize"
@@ -68,5 +68,7 @@ The output JSON contains an even more limited subset:
 * End time
 * Event ID
 * Room
+
+The output JSON is stored in `~/.local/share/web/events`.
 
 The service should be compatible as-is with any Library Calendar-based event calendar system. If you require additional functionality please feel free to open an issue on the tracker or make the modification on your local copy.
