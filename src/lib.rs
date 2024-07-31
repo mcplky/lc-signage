@@ -60,6 +60,7 @@ struct LcEvent {
 #[derive(Debug, Serialize, Deserialize)]
 struct OutputEvent {
     title: String,
+    public: bool,
     start_time: String,
     end_time: String,
     id: String,
@@ -271,6 +272,7 @@ impl LcSignage {
 
                 publish_events.push(OutputEvent {
                     title: event.title,
+                    public: event.public,
                     start_time: start_time.format("%l:%M %p").to_string(),
                     end_time: end_time.format("%l:%M %p").to_string(),
                     room: event
