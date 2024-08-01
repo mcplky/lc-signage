@@ -34,9 +34,9 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 #[allow(dead_code)]
 #[derive(Serialize, Deserialize, Debug)]
 struct Token {
-    token_type: Value,
+    t_type: Value,
     expires_in: Value,
-    access_token: Value,
+    access: Value,
 }
 
 /// `LcEvent`
@@ -82,6 +82,7 @@ pub struct ConnectionData {
 }
 
 impl ConnectionData {
+    #[must_use]
     pub fn new(
         oauth_url: String,
         token_url: String,
@@ -183,6 +184,7 @@ pub struct LcSignage {
 }
 
 impl LcSignage {
+    #[must_use]
     pub fn new(room_keys: Vec<String>, connection: ConnectionData) -> Self {
         Self {
             room_keys,
@@ -205,12 +207,11 @@ impl LcSignage {
         let mut response_time = 0.;
 
         // retrieve access key before update loop begins
-        self.connection.access_token = self
-            .connection
+        self.connection
             .fetch_api_key()?
             .access_token()
             .secret()
-            .to_owned();
+            .clone_into(&mut self.connection.access_token);
 
         for room in &self.room_keys {
             let request_start = Instant::now();
