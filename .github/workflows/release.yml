@@ -51,28 +51,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: ${{ env.git_lfs }}
+          
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.targets }}
+          
       - name: Populate cargo cache
         uses: Leafwing-Studios/cargo-cache@v2
         with:
           sweep-cache: true
+          
       - name: Prepare output directories
         run: rm -rf tmp; mkdir -p tmp/binary '${{ env.app }}'
+        
       - name: Build binaries
         run: |
           for target in ${{ matrix.targets}}; do
             cargo build --locked --profile='${{ matrix.profile }}' --target="${target}"
             mv target/"${target}"/'${{ matrix.profile }}' -create -output '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
           done
+          
       - name: Move binaries to app
         run: mv tmp/binary/*'${{ matrix.binary_ext }}' '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
+        
       - name: Package app
         run: zip --recurse-paths '${{ env.package }}' '${{ env.app_package_name }}'
+        
       - name: Upload package to workflow artifacts
-        uses: actions/upload-artifacts@v4
+        uses: actions/upload-artifact@v4
         with:
           path: tmp/app/${{ env.package }}
           name: package-${{ matrix.platform }}
