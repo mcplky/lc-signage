@@ -15,6 +15,7 @@ on:
 env:
   app_package_name: lc-signage
   app_binary_name: lc-signage
+  app: lc-signage
 
 jobs:
   get-version:
