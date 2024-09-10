@@ -70,7 +70,7 @@ jobs:
         run: |
           for target in ${{ matrix.targets}}; do
             cargo build --locked --profile='${{ matrix.profile }}' --target="${target}"
-            mv target/"${target}"/'${{ matrix.profile }}' -create -output '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
+            mv target/"${target}"/'${{ matrix.profile }}/${{ env.cargo_build_binary_name }}${{ matrix.binary_ext }}' tmp/binary/"${target}"'${{ matrix.binary_ext }}'
           done
           
       - name: Move binaries to app
