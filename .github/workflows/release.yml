@@ -48,7 +48,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout repository
-        uses: actions/checkout@4
+        uses: actions/checkout@v4
         with:
           lfs: ${{ env.git_lfs }}
       - name: Install Rust toolchain
