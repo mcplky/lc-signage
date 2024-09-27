@@ -252,6 +252,10 @@ impl LcSignage {
         let today = chrono::Local::now().date_naive();
 
         for event in events {
+            if event.moderation_state == "cancelled".into() {
+                continue;
+            }
+
             let mut time_str = event.start_date.split_whitespace();
             let scheduled_date = NaiveDate::parse_from_str(
                 time_str.next().ok_or("could not read JSON time/date")?,
