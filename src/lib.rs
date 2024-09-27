@@ -52,6 +52,7 @@ struct LcEvent {
     branch: Value,
     room: Value,
     id: String,
+    moderation_state: String,
 }
 
 /// `OutputEvent`
@@ -65,6 +66,7 @@ struct OutputEvent {
     end_time: String,
     id: String,
     room: String,
+    moderation_state: String,
 }
 
 /// `ConnectionData`
@@ -285,6 +287,7 @@ impl LcSignage {
                         .unwrap()
                         .to_owned(),
                     id: event.id,
+                    moderation_state: event.moderation_state,
                 });
             } else {
                 break;
