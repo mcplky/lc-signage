@@ -252,7 +252,7 @@ impl LcSignage {
         let today = chrono::Local::now().date_naive();
 
         for event in events {
-            if event.moderation_state == "cancelled".into() {
+            if event.moderation_state == "cancelled".to_string() {
                 continue;
             }
 
