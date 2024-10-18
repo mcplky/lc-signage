@@ -151,11 +151,9 @@ impl ConnectionData {
         );
 
         let token_result = client
-            .exchange_password(
-                &ResourceOwnerUsername::new(self.username.clone()),
-                &ResourceOwnerPassword::new(self.password.clone()),
-            )
-            .request(http_client)?;
+            .exchange_client_credentials()
+            .add_scope(Scope::new("read".to_string()))
+            .request(client)?;
 
         Ok(token_result)
     }
