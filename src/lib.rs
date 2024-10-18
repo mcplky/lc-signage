@@ -221,11 +221,11 @@ impl LcSignage {
         let mut response_time = 0.;
 
         // retrieve access key before update loop begins
-        // self.connection
-        //     .fetch_api_key()?
-        //     .access_token()
-        //     .secret()
-        //     .clone_into(&mut self.connection.access_token);
+        self.connection
+            .fetch_api_key()?
+            .access_token()
+            .secret()
+            .clone_into(&mut self.connection.access_token);
 
         for room in &self.room_keys {
             let request_start = Instant::now();
