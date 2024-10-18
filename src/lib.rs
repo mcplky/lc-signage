@@ -6,6 +6,7 @@ use std::{
     time::Instant,
 };
 
+use ::reqwest::{Client, ClientBuilder};
 use anyhow::Context;
 use bytes::Bytes;
 use chrono::{NaiveDate, NaiveTime};
@@ -111,16 +112,28 @@ impl ConnectionData {
     /// Contact the provided URL to acquire a JSON object, and then return that JSON as a parsed
     /// Rust object as a Vec<LcEvent>.
     pub(crate) async fn fetch_json(&mut self, room: &str) -> Result<Vec<LcEvent>> {
-        let https = HttpsConnector::new();
-        let client = Client::builder(TokioExecutor::new()).build(https);
+        // let https = HttpsConnector::new();
+        // let https = HttpConnector::new();
+        // let client = Client::builder(TokioExecutor::new()).build(https);
+        let client = Client::new();
 
-        let request = self.make_request(room)?;
+        let url = self.make_request(room)?;
+
+        // info!("{:?}", request);
+
+        let res = client
+            .get(url)
+            .bearer_auth(&self.access_token)
+            .send()
+            .await?
+            .json::<Vec<LcEvent>>()
+            .await?;
 
         // Fetch the url...
-        let response = client.request(request).await?;
-        let body = response.collect().await?.aggregate();
 
-        Ok(serde_json::from_reader(body.reader())?)
+        // let body = response.collect().await?.aggregate();
+
+        Ok(res)
     }
 
     /// fn `fetch_api_key()`
@@ -151,7 +164,7 @@ impl ConnectionData {
     ///
     /// Produces the request for the feed JSON with the appropriate authorization token.
     /// Encodes the secret auth token information until it is consumed by `fetch_json`
-    fn make_request(&mut self, room: &str) -> Result<Request<Full<Bytes>>> {
+    fn make_request(&mut self, room: &str) -> Result<String> {
         let url = if room.contains('+') {
             let mut room_split = room.split('+');
             let first_room = room_split
@@ -166,13 +179,13 @@ impl ConnectionData {
             format!("{}?rooms[{}]={}", self.feed_url, room, room)
         };
 
-        let result = Request::builder()
-            .method(Method::GET)
-            .uri(url)
-            .header("Authorization", format!("Bearer {}", self.access_token))
-            .body(Full::new(Bytes::from("hello")))?;
+        // let result = Request::builder()
+        //     .method(Method::GET)
+        //     .uri(url)
+        //     .header("Authorization", format!("Bearer {}", self.access_token))
+        //     .body(Full::new(Bytes::from("hello")))?;
 
-        Ok(result)
+        Ok(url)
     }
 }
 
@@ -209,11 +222,11 @@ impl LcSignage {
         let mut response_time = 0.;
 
         // retrieve access key before update loop begins
-        self.connection
-            .fetch_api_key()?
-            .access_token()
-            .secret()
-            .clone_into(&mut self.connection.access_token);
+        // self.connection
+        //     .fetch_api_key()?
+        //     .access_token()
+        //     .secret()
+        //     .clone_into(&mut self.connection.access_token);
 
         for room in &self.room_keys {
             let request_start = Instant::now();
@@ -221,7 +234,7 @@ impl LcSignage {
             let received_events = match self.connection.fetch_json(room).await {
                 Ok(ev) => ev,
                 Err(e) => {
-                    error!("error encountered in room {}: {}", room, e);
+                    error!("error encountered in room {}: {:?}", room, e);
                     continue;
                 }
             };
