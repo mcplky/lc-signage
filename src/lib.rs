@@ -154,7 +154,7 @@ impl ConnectionData {
         let token_result = client
             .exchange_client_credentials()
             .add_scope(Scope::new("read".to_string()))
-            .request(client)?;
+            .request(http_client)?;
 
         Ok(token_result)
     }
