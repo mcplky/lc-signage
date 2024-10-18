@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     collections::HashMap,
     fs::{self, File},
     io::prelude::*,
@@ -151,10 +152,7 @@ impl ConnectionData {
             Some(TokenUrl::new(self.token_url.clone())?),
         );
 
-        let token_result = client
-            .exchange_client_credentials()
-            .add_scope(Scope::new("read".to_string()))
-            .request(http_client)?;
+        let token_result = client.exchange_client_credentials().request(http_client)?;
 
         Ok(token_result)
     }
@@ -177,12 +175,6 @@ impl ConnectionData {
         } else {
             format!("{}?rooms[{}]={}", self.feed_url, room, room)
         };
-
-        // let result = Request::builder()
-        //     .method(Method::GET)
-        //     .uri(url)
-        //     .header("Authorization", format!("Bearer {}", self.access_token))
-        //     .body(Full::new(Bytes::from("hello")))?;
 
         Ok(url)
     }
