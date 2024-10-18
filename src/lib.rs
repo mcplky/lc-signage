@@ -20,7 +20,8 @@ use oauth2::{
     basic::{BasicClient, BasicTokenType},
     curl::http_client,
     reqwest, AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, HttpRequest,
-    ResourceOwnerPassword, ResourceOwnerUsername, StandardTokenResponse, TokenResponse, TokenUrl,
+    ResourceOwnerPassword, ResourceOwnerUsername, Scope, StandardTokenResponse, TokenResponse,
+    TokenUrl,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
