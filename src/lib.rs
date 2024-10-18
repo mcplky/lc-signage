@@ -12,19 +12,19 @@ use bytes::Bytes;
 use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
 use http_body_util::{BodyExt, Full};
-use hyper::{body::Buf, Method, Request};
+use hyper::{client::conn::*, Method, Request};
 use hyper_tls::HttpsConnector;
-use hyper_util::client::legacy::Client;
-use hyper_util::rt::TokioExecutor;
-use log::error;
+use hyper_util::rt::TokioIo;
+use log::{error, info};
 use oauth2::{
     basic::{BasicClient, BasicTokenType},
     curl::http_client,
-    AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, ResourceOwnerPassword,
-    ResourceOwnerUsername, StandardTokenResponse, TokenResponse, TokenUrl,
+    reqwest, AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, HttpRequest,
+    ResourceOwnerPassword, ResourceOwnerUsername, StandardTokenResponse, TokenResponse, TokenUrl,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use tokio::net::TcpStream;
 
 // Type alias for tokio return types to handle asynchronous code correctly
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
