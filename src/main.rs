@@ -89,7 +89,7 @@ async fn main() -> Result<()> {
                             total_time - r
                         );
                     }
-                    Err(e) => error!("error encountered: {}", e),
+                    Err(e) => error!("error encountered: {:?}", e),
                 }
 
                 sleep(next_time - Instant::now());
@@ -97,7 +97,7 @@ async fn main() -> Result<()> {
             }
         }
         Err(e) => {
-            error!("Fatal error - config file not found. {}", e);
+            error!("Fatal error - config file not found. {:?}", e);
         }
     }
 

@@ -1,34 +1,22 @@
 [package]
 name = "lc-signage"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hyper = { version = "1.2.0", features = ["full"] }
-http = "0.2.9"
-http-body-util = "0.1.0"
-tokio = { version = "1.32.0", features = ["full"] }
-hyper-util = { version = "0.1.3", features = [
-    "client",
-    "client-legacy",
-    "http1",
-    "tokio",
-] }
-bytes = "1.5.0"
-serde_json = "1.0.108"
-url = "2.4.1"
-serde = { version = "1.0.188", features = ["derive"] }
-hyper-tls = "0.6.0"
+tokio = { version = "1.41.0", features = ["full"] }
+serde_json = "1.0.132"
+serde = { version = "1.0.213", features = ["derive"] }
 oauth2 = { version = "4.4.2", features = ["curl"] }
-curl = "0.4.44"
-anyhow = "1.0.75"
-chrono = "0.4.31"
-home = "0.5.5"
-systemd-journal-logger = "2.1.0"
-log = "0.4.20"
+anyhow = "1.0.91"
+chrono = "0.4.38"
+home = "0.5.9"
+systemd-journal-logger = "2.2.0"
+log = "0.4.22"
 config = { version = "0.14.0", features = ["toml"] }
+reqwest = {version ="0.12.8", features = ["json"] }
 
 [lints.clippy]
 pedantic = "warn"

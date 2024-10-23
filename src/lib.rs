@@ -7,21 +7,16 @@ use std::{
 };
 
 use anyhow::Context;
-use bytes::Bytes;
 use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
-use http_body_util::{BodyExt, Full};
-use hyper::{body::Buf, Method, Request};
-use hyper_tls::HttpsConnector;
-use hyper_util::client::legacy::Client;
-use hyper_util::rt::TokioExecutor;
 use log::error;
 use oauth2::{
     basic::{BasicClient, BasicTokenType},
     curl::http_client,
-    AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, ResourceOwnerPassword,
-    ResourceOwnerUsername, StandardTokenResponse, TokenResponse, TokenUrl,
+    AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse,
+    TokenUrl,
 };
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -52,6 +47,7 @@ struct LcEvent {
     branch: Value,
     room: Value,
     id: String,
+    moderation_state: String,
 }
 
 /// `OutputEvent`
@@ -65,11 +61,13 @@ struct OutputEvent {
     end_time: String,
     id: String,
     room: String,
+    moderation_state: String,
 }
 
 /// `ConnectionData`
 ///
 /// Struct for configuration information that is used to build requests.
+#[expect(dead_code)]
 pub struct ConnectionData {
     oauth_url: String,
     token_url: String,
@@ -109,16 +107,19 @@ impl ConnectionData {
     /// Contact the provided URL to acquire a JSON object, and then return that JSON as a parsed
     /// Rust object as a Vec<LcEvent>.
     pub(crate) async fn fetch_json(&mut self, room: &str) -> Result<Vec<LcEvent>> {
-        let https = HttpsConnector::new();
-        let client = Client::builder(TokioExecutor::new()).build(https);
+        let client = Client::new();
 
-        let request = self.make_request(room)?;
+        let url = self.make_request(room)?;
 
-        // Fetch the url...
-        let response = client.request(request).await?;
-        let body = response.collect().await?.aggregate();
+        let res = client
+            .get(url)
+            .bearer_auth(&self.access_token)
+            .send()
+            .await?
+            .json::<Vec<LcEvent>>()
+            .await?;
 
-        Ok(serde_json::from_reader(body.reader())?)
+        Ok(res)
     }
 
     /// fn `fetch_api_key()`
@@ -135,12 +136,7 @@ impl ConnectionData {
             Some(TokenUrl::new(self.token_url.clone())?),
         );
 
-        let token_result = client
-            .exchange_password(
-                &ResourceOwnerUsername::new(self.username.clone()),
-                &ResourceOwnerPassword::new(self.password.clone()),
-            )
-            .request(http_client)?;
+        let token_result = client.exchange_client_credentials().request(http_client)?;
 
         Ok(token_result)
     }
@@ -149,7 +145,7 @@ impl ConnectionData {
     ///
     /// Produces the request for the feed JSON with the appropriate authorization token.
     /// Encodes the secret auth token information until it is consumed by `fetch_json`
-    fn make_request(&mut self, room: &str) -> Result<Request<Full<Bytes>>> {
+    fn make_request(&mut self, room: &str) -> Result<String> {
         let url = if room.contains('+') {
             let mut room_split = room.split('+');
             let first_room = room_split
@@ -164,13 +160,7 @@ impl ConnectionData {
             format!("{}?rooms[{}]={}", self.feed_url, room, room)
         };
 
-        let result = Request::builder()
-            .method(Method::GET)
-            .uri(url)
-            .header("Authorization", format!("Bearer {}", self.access_token))
-            .body(Full::new(Bytes::from("hello")))?;
-
-        Ok(result)
+        Ok(url)
     }
 }
 
@@ -219,7 +209,7 @@ impl LcSignage {
             let received_events = match self.connection.fetch_json(room).await {
                 Ok(ev) => ev,
                 Err(e) => {
-                    error!("error encountered in room {}: {}", room, e);
+                    error!("error encountered in room {}: {:?}", room, e);
                     continue;
                 }
             };
@@ -285,6 +275,7 @@ impl LcSignage {
                         .unwrap()
                         .to_owned(),
                     id: event.id,
+                    moderation_state: event.moderation_state,
                 });
             } else {
                 break;
