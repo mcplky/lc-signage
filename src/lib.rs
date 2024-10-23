@@ -107,14 +107,9 @@ impl ConnectionData {
     /// Contact the provided URL to acquire a JSON object, and then return that JSON as a parsed
     /// Rust object as a Vec<LcEvent>.
     pub(crate) async fn fetch_json(&mut self, room: &str) -> Result<Vec<LcEvent>> {
-        // let https = HttpsConnector::new();
-        // let https = HttpConnector::new();
-        // let client = Client::builder(TokioExecutor::new()).build(https);
         let client = Client::new();
 
         let url = self.make_request(room)?;
-
-        // info!("{:?}", request);
 
         let res = client
             .get(url)
@@ -123,10 +118,6 @@ impl ConnectionData {
             .await?
             .json::<Vec<LcEvent>>()
             .await?;
-
-        // Fetch the url...
-
-        // let body = response.collect().await?.aggregate();
 
         Ok(res)
     }
