@@ -613,7 +613,6 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "httparse",
- "httpdate",
  "itoa",
  "pin-project-lite",
  "smallvec",
@@ -773,16 +772,9 @@ name = "lc-signage"
 version = "0.3.0"
 dependencies = [
  "anyhow",
- "bytes",
  "chrono",
  "config",
- "curl",
  "home",
- "http 0.2.12",
- "http-body-util",
- "hyper 1.5.0",
- "hyper-tls",
- "hyper-util",
  "log",
  "oauth2",
  "reqwest 0.12.8",
@@ -790,7 +782,6 @@ dependencies = [
  "serde_json",
  "systemd-journal-logger",
  "tokio",
- "url",
 ]
 
 [[package]]

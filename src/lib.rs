@@ -1,5 +1,4 @@
 use std::{
-    borrow::Borrow,
     collections::HashMap,
     fs::{self, File},
     io::prelude::*,
@@ -7,26 +6,19 @@ use std::{
     time::Instant,
 };
 
-use ::reqwest::{Client, ClientBuilder};
 use anyhow::Context;
-use bytes::Bytes;
 use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
-use http_body_util::{BodyExt, Full};
-use hyper::{client::conn::*, Method, Request};
-use hyper_tls::HttpsConnector;
-use hyper_util::rt::TokioIo;
-use log::{error, info};
+use log::error;
 use oauth2::{
     basic::{BasicClient, BasicTokenType},
     curl::http_client,
-    reqwest, AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, HttpRequest,
-    ResourceOwnerPassword, ResourceOwnerUsername, Scope, StandardTokenResponse, TokenResponse,
+    AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse,
     TokenUrl,
 };
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tokio::net::TcpStream;
 
 // Type alias for tokio return types to handle asynchronous code correctly
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -75,6 +67,7 @@ struct OutputEvent {
 /// `ConnectionData`
 ///
 /// Struct for configuration information that is used to build requests.
+#[expect(dead_code)]
 pub struct ConnectionData {
     oauth_url: String,
     token_url: String,
