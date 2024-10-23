@@ -64,6 +64,7 @@ Currently `lc-signage` is very limited in scope and is designed for our use case
 The output JSON contains an even more limited subset:
 
 * Title
+* Public/Private
 * Start time
 * End time
 * Event ID
