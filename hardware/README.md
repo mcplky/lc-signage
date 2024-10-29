@@ -1,8 +1,10 @@
 # Hardware
 
-The Live Signage system requires some assembly and bespoke component fabrication. Luckily, if one has access to a laser cutter at their local library or makerspace, this process becomes much easier.
+The Live Signage system requires some assembly and bespoke component fabrication. Luckily, if one has access to a laser cutter at their local library or makerspace, this process becomes much easier. This tutorial is ment to be read in its entrirety before the first step is taken. Sign installation sites will need to be evaluated for feasibility before installation of the power delivery system and sign anchor points.
 
-## Physical Materials Needed
+## Gather These First
+
+### Materials Needed
 
 - Opaque Acrylic (Color choice can be used for branding. We used black for a clean look.) at 12" x 19" at 1/8th"
 
@@ -35,7 +37,7 @@ The Live Signage system requires some assembly and bespoke component fabrication
 
 - 1/4" - 20 Drywall Anchors (The length varies with the depth of your drywall. Ours was 1/2")
 
-## Tools Needed
+### Tools Needed
 - Nitrile Gloves
 - Isopropanol in a Spray Bottle
 - Clear Cellophane Tape
@@ -53,14 +55,23 @@ The Live Signage system requires some assembly and bespoke component fabrication
 - A Fan of Some Sort (I used a USB Desk Fan)
 - A Ladder
 - Another Person
-- 
+
+### Software and Files Needed
+
+- Raspberry Pi Imager
+- MiniTool Partition Wizard
+- Laser Cutter Software (We used LightBurn)
+- LightBurn Cut Files OR use provided SVG file with your own laser cutter software
+- Putty (Or any SSH program)
 
 
+## The Process
 
-## Files Needed
+### Creating Live Sign Units
 
--included
+### Creating Frames and Covers
 
+## Installation
 
-
+### Preparing The Area
 
