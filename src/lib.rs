@@ -6,7 +6,7 @@ use std::{
     time::Instant,
 };
 
-use anyhow::Context;
+use anyhow::{Context, Error};
 use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
 use log::error;
@@ -67,16 +67,14 @@ struct OutputEvent {
 /// `ConnectionData`
 ///
 /// Struct for configuration information that is used to build requests.
-#[expect(dead_code)]
 pub struct ConnectionData {
     oauth_url: String,
     token_url: String,
     feed_url: String,
     client_id: String,
     client_secret: String,
-    username: String,
-    password: String,
     access_token: String,
+    save_path: Option<String>,
 }
 
 impl ConnectionData {
@@ -87,8 +85,7 @@ impl ConnectionData {
         feed_url: String,
         client_id: String,
         client_secret: String,
-        username: String,
-        password: String,
+        save_path: Option<String>,
     ) -> Self {
         Self {
             oauth_url,
@@ -96,8 +93,7 @@ impl ConnectionData {
             feed_url,
             client_id,
             client_secret,
-            username,
-            password,
+            save_path,
             access_token: String::new(),
         }
     }
@@ -293,38 +289,33 @@ impl LcSignage {
     ///
     /// The `HashMap` is converted to an iterator; we currently are not using key-based lookups
     fn write_output_json(&self) -> Result<()> {
-        let folder_path: PathBuf = [
-            home_dir().ok_or("could not find home directory")?,
-            ".local".into(),
-            "share".into(),
-            "web".into(),
-            "events".into(),
-        ]
-        .iter()
-        .collect();
-
-        if !folder_path.exists() {
-            fs::create_dir_all(folder_path)?;
-        }
-
-        for room in &self.room_keys {
-            let save_path: PathBuf = [
+        let save_path: PathBuf = if self.connection.save_path.is_some() {
+            self.connection.save_path.as_ref().unwrap().into()
+        } else {
+            [
                 home_dir().ok_or("could not find home directory")?,
                 ".local".into(),
                 "share".into(),
                 "web".into(),
                 "events".into(),
-                format!("{room}.json").into(),
             ]
             .iter()
-            .collect();
+            .collect()
+        };
+
+        if !save_path.exists() {
+            fs::create_dir_all(&save_path)?;
+        }
+
+        for room in &self.room_keys {
+            let room_save_path = save_path.join(format!("{room}.json"));
 
             let mut save = File::options()
                 .read(false)
                 .write(true)
                 .create(true)
                 .truncate(true)
-                .open(save_path)?;
+                .open(room_save_path)?;
 
             let json = if self.processed_events.contains_key(&room.to_string()) {
                 serde_json::to_string(self.processed_events.get(&room.to_string()).unwrap())?

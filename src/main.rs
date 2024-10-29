@@ -51,14 +51,17 @@ async fn main() -> Result<()> {
             let client_secret = cfg
                 .get_string("client_secret")
                 .context("expected client secret")?;
-            let username = cfg.get_string("username").context("expected username")?;
-            let password = cfg.get_string("password").context("expected password")?;
             let room_keys = cfg
                 .get_array("room_keys")
                 .context("expected room keys")?
                 .into_iter()
                 .map(|r| r.to_string())
                 .collect();
+            let save_path = if let Ok(path) = cfg.get_string("save_path") {
+                Some(path)
+            } else {
+                None
+            };
 
             // setup service structs
             let connection = ConnectionData::new(
@@ -67,8 +70,7 @@ async fn main() -> Result<()> {
                 feed_url,
                 client_id,
                 client_secret,
-                username,
-                password,
+                save_path,
             );
             let mut lc_signage = LcSignage::new(room_keys, connection);
 
