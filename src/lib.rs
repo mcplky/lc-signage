@@ -6,7 +6,7 @@ use std::{
     time::Instant,
 };
 
-use anyhow::{Context, Error};
+use anyhow::Context;
 use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
 use log::error;
