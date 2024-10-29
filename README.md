@@ -6,7 +6,7 @@ Display signage backend service for Library Calendar-driven websites. Takes even
 
 `lc-signage` runs on any Linux distribution with `systemd`. `systemd` support is only needed for logging to `journald`. We plan to enable a config option for logging for alternative init systems like `runit`, `openrc` and `sysvinit`.
 
-Download the current release from the [releases](/releases/latest) and extract the binary to your desired path. The binary can be run as-is as long as the configuration file is present.
+Download the current release from the [releases](https://github.com/mcplky/lc-signage/releases/latest) and extract the binary to your desired path. The binary can be run as-is as long as the configuration file is present.
 
 ### Building from source
 
