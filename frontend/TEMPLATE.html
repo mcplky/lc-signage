@@ -1,0 +1,24 @@
+<html>
+<head>
+<title>Room Events</title>
+<link rel="stylesheet" href="lc-signage.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script>
+var room = "[ROOM_NAME]";			//Room name, displayed in top-right corner of screen
+var feedURL = "[JSON_FILE]";	//URL of JSON feed
+</script>
+<script src="lc-signage.js"></script>
+</head>
+<body>
+<div id="time"></div>
+<div id="main"></div>
+<div class="msgbox">
+	<div class="msgtext">Please check in at the front desk when you arrive for your room reservation</div>
+</div>
+<div class="footer">
+	<img src="[LOGO_IMG]" class="logo" />
+	<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=[QRCODE_LINK]" class="qrcode" />
+	Need a room?<br>Scan this QR<br>code to make<br>a reservation
+</div>
+</body>
+</html>
