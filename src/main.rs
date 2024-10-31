@@ -9,7 +9,7 @@ use config::Config;
 use log::{error, info, LevelFilter};
 use systemd_journal_logger::JournalLog;
 
-// Type alias for tokio return types to handle asynchronous code correctly
+// Type alias for tokio return types
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 use lc_signage::{ConnectionData, LcSignage};

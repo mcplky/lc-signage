@@ -20,7 +20,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-// Type alias for tokio return types to handle asynchronous code correctly
+// Type alias for tokio return types
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 /// `Token`
@@ -162,7 +162,8 @@ impl ConnectionData {
 
 /// `LcSignage`
 ///
-/// Core part of the process. `LcSignage` maintains information about
+/// Core part of the process. `LcSignage` maintains information about the connection,
+/// builds out the output data structures, and serializes those to the output directory.
 pub struct LcSignage {
     room_keys: Vec<String>,
     processed_events: HashMap<String, Vec<OutputEvent>>,
@@ -180,8 +181,13 @@ impl LcSignage {
     }
     /// fn `process_events()`
     ///
-    /// core program loop, abstracted from main to enable recoverable error handling
-    /// `room_keys` will need to be modified if a room is to be given a display
+    /// Core program process. Performs the following steps:
+    ///
+    /// - Retrieve OAuth2 API key to access private events.
+    /// - Iterates over the list of rooms, performing a JSON request for each one,
+    ///   processing the output and storing it for serialization.
+    /// - After all rooms are processed, the data is serialized to disk in the output directory.
+    /// - Clears the owned struct for processed events to minimize needed reallocations.
     ///
     /// # Errors
     ///
@@ -189,6 +195,8 @@ impl LcSignage {
     /// server unreachable
     /// JSON incorrect or malformed
     /// unable to parse the JSON to `LcEvent`
+    ///
+    /// If an error occurs in a room, the program skips that room and continues with the remaining rooms.
     pub async fn process_events(&mut self) -> Result<f32> {
         let mut response_time = 0.;
 

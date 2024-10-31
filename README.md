@@ -2,9 +2,19 @@
 
 Display signage backend service for Library Calendar-driven websites. Takes event information from the calendar and processes it into smaller individual `.json` files for a frontend webpage or other service.
 
+`lc-signage` is developed and maintained by the Madion County Public Library Technology Services department.
+
+## Package Information
+
+- lc-signage: Rust client service to poll website for event information.
+- lc-signage/frontend: Example HTML, CSS, and JavaScript for a server deployment.
+- lc-signage/hardware: Information about the equipment and hardware used to create a working display sign.
+
+See the subdirectories for additional information on frontend and hardware. All three components are able to be used without the other if desired; the exported JSON from the service is a stripped-down and minimalized version of the JSON returned by Library Calendar.
+
 ## Installation
 
-`lc-signage` runs on any Linux distribution with `systemd`. `systemd` support is only needed for logging to `journald`. We plan to enable a config option for logging for alternative init systems like `runit`, `openrc` and `sysvinit`.
+`lc-signage` runs on any Linux distribution with `systemd`. `systemd` support is only needed for logging to `journald`. We recommend using a Debian or Ubuntu installation as both of these provide the needed dependencies by default. 
 
 Download the current release from the [releases](https://github.com/mcplky/lc-signage/releases/latest) and extract the binary to your desired path. The binary can be run as-is as long as the configuration file is present.
 
@@ -60,7 +70,7 @@ save_path = "<path to output directory>"
 
 ## Limitations
 
-Currently `lc-signage` is very limited in scope and is designed for our use case. It will only parse out the following information from a calendar event:
+Currently `lc-signage` is limited in scope and is designed for our use case. It will only parse out the following information from a calendar event:
 
 * Title
 * Public/Private
