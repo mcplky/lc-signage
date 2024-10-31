@@ -300,15 +300,8 @@ impl LcSignage {
         let save_path: PathBuf = if self.connection.save_path.is_some() {
             self.connection.save_path.as_ref().unwrap().into()
         } else {
-            [
-                home_dir().ok_or("could not find home directory")?,
-                ".local".into(),
-                "share".into(),
-                "web".into(),
-                "events".into(),
-            ]
-            .iter()
-            .collect()
+            let path = home_dir().ok_or("could not find home directory")?;
+            path.join(".local/share/web/events")
         };
 
         if !save_path.exists() {

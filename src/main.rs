@@ -27,17 +27,11 @@ async fn main() -> Result<()> {
     JournalLog::new().unwrap().install().unwrap();
     log::set_max_level(LevelFilter::Info);
 
-    let config_location: PathBuf = [
-        home::home_dir().unwrap(),
-        ".config".into(),
-        "lc-signage".into(),
-        "config.toml".into(),
-    ]
-    .iter()
-    .collect();
+    let config_location = home::home_dir().unwrap();
 
     let cfg = Config::builder().add_source(config::File::with_name(
         config_location
+            .join(".config/lc-signage/config.toml")
             .to_str()
             .ok_or(anyhow!("config file not located"))?,
     ));
@@ -75,7 +69,8 @@ async fn main() -> Result<()> {
             let mut lc_signage = LcSignage::new(room_keys, connection);
 
             // sleep process in 15 min intervals
-            let interval = Duration::from_secs(900);
+            let sleep_interval = 900;
+            let interval = Duration::from_secs(sleep_interval);
             let mut next_time = Instant::now() + interval;
 
             loop {
