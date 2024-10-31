@@ -1,4 +1,6 @@
-lc-livesignage_frontend_README
+# lc-livesignage_frontend_README
+
+lc-LiveSignage frontend uses a basic HTML page driven by JavaScript and CSS.
 
 Created by LG [lucas@madisonlibrary.org]
 
@@ -7,35 +9,41 @@ Madison County Public Library, KY, USA
 https://madisonlibrary.org/
 
 
-README.md 		:: This file.
 
-TEMPLATE.html 	:: Template file from which all signage pages can be generated.
+## Files
 
-lc-signage.css 	:: CSS file for lc-signage.
+- README.md 		:: This file.
 
-lc-signage.js 	:: JavaScript file for lc-signage.
+- TEMPLATE.html 	:: Template file from which all signage pages can be generated.
 
+- lc-signage.css 	:: CSS file for lc-signage.
 
-lc-LiveSignage frontend uses a basic HTML page driven by JavaScript and CSS.
-
-For each sign, create a HTML file from TEMPLATE.html.
-
-Modify events.css and events.js to fit your needs.
+- lc-signage.js 	:: JavaScript file for lc-signage.
 
 
-Required:
 
- [ROOM_NAME] = name of the room
+## Instructions
 
- [JSON_FILE] = path to the json file to be parsed
+1. For each sign, create a HTML file from TEMPLATE.html.
+
+2. Modify events.css and events.js to fit your needs.
 
 
-Optional:	
 
- [LOGO_IMG] = path to company logo image
+### Required variables:
 
- [QRCODE_LINK] = URL to be embeded in the 'more info' QRcode
+	- [ROOM_NAME] = name of the room
 
- [PUBLIC_TRUE] = path to 'public' event denotion image
+	- [JSON_FILE] = path to the json file to be parsed
 
- [PUBLIC_FALSE] = path to 'private' event denotion image
+
+
+### Optional:	
+
+	- [LOGO_IMG] = path to company logo image
+
+	- [QRCODE_LINK] = URL to be embeded in the 'more info' QRcode
+
+	- [PUBLIC_TRUE] = path to 'public' event denotion image
+
+	- [PUBLIC_FALSE] = path to 'private' event denotion image
