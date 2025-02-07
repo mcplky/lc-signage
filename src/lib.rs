@@ -151,11 +151,11 @@ impl ConnectionData {
             for rm in room_split {
                 room_str = format!("{room_str}&rooms[{rm}]={rm}");
             }
-            format!("{}{}", self.feed_url, room_str, "&start=today&end=tomorrow")
+            format!("{}{}&start=today&end=tomorrow", self.feed_url, room_str)
         } else {
             format!(
-                "{}?rooms[{}]={}",
-                self.feed_url, room, room, "&start=today&end=tomorrow"
+                "{}?rooms[{}]={}&start=today&end=tomorrow",
+                self.feed_url, room, room
             )
         };
 
