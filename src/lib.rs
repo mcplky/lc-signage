@@ -244,40 +244,49 @@ impl LcSignage {
     /// The `HashMap` is keyed by the room ID number and is dynamically generated.
     fn generate_room_events(events: Vec<LcEvent>) -> Result<Vec<OutputEvent>> {
         let mut publish_events = vec![];
+        let today = chrono::Local::now().date_naive();
 
         for event in events {
             let mut time_str = event.start_date.split_whitespace();
-
-            let start_time = NaiveTime::parse_from_str(
+            let scheduled_date = NaiveDate::parse_from_str(
                 time_str.next().ok_or("could not read JSON time/date")?,
-                "%H:%M:%S",
+                "%Y-%m-%d",
             )?;
 
-            let end_time = NaiveTime::parse_from_str(
-                event
-                    .end_date
-                    .split_whitespace()
-                    .nth(1)
-                    .ok_or("could not split end date string")?,
-                "%H:%M:%S",
-            )?;
+            if scheduled_date == today {
+                let start_time = NaiveTime::parse_from_str(
+                    time_str.next().ok_or("could not read JSON time/date")?,
+                    "%H:%M:%S",
+                )?;
 
-            publish_events.push(OutputEvent {
-                title: event.title,
-                public: event.public,
-                start_time: start_time.format("%l:%M %p").to_string(),
-                end_time: end_time.format("%l:%M %p").to_string(),
-                room: event
-                    .room
-                    .as_object()
-                    .unwrap()
-                    .keys()
-                    .next()
-                    .unwrap()
-                    .to_owned(),
-                id: event.id,
-                moderation_state: event.moderation_state,
-            });
+                let end_time = NaiveTime::parse_from_str(
+                    event
+                        .end_date
+                        .split_whitespace()
+                        .nth(1)
+                        .ok_or("could not split end date string")?,
+                    "%H:%M:%S",
+                )?;
+
+                publish_events.push(OutputEvent {
+                    title: event.title,
+                    public: event.public,
+                    start_time: start_time.format("%l:%M %p").to_string(),
+                    end_time: end_time.format("%l:%M %p").to_string(),
+                    room: event
+                        .room
+                        .as_object()
+                        .unwrap()
+                        .keys()
+                        .next()
+                        .unwrap()
+                        .to_owned(),
+                    id: event.id,
+                    moderation_state: event.moderation_state,
+                });
+            } else {
+                break;
+            }
         }
 
         Ok(publish_events)
