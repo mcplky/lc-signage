@@ -247,15 +247,13 @@ impl LcSignage {
         let today = chrono::Local::now().date_naive();
 
         for event in events {
-            let mut time_str = event.start_date.split_whitespace();
-            let _scheduled_date = NaiveDate::parse_from_str(
-                time_str.next().ok_or("could not read JSON time/date")?,
-                "%Y-%m-%d",
-            )?;
-
             // if scheduled_date == today {
             let start_time = NaiveTime::parse_from_str(
-                time_str.next().ok_or("could not read JSON time/date")?,
+                event
+                    .start_date
+                    .split_whitespace()
+                    .nth(1)
+                    .ok_or("could not read JSON time/date")?,
                 "%H:%M:%S",
             )?;
 
