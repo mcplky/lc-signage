@@ -248,10 +248,10 @@ impl LcSignage {
 
         for event in events {
             let mut time_str = event.start_date.split_whitespace();
-            // let scheduled_date = NaiveDate::parse_from_str(
-            //     time_str.next().ok_or("could not read JSON time/date")?,
-            //     "%Y-%m-%d",
-            // )?;
+            let scheduled_date = NaiveDate::parse_from_str(
+                time_str.next().ok_or("could not read JSON time/date")?,
+                "%Y-%m-%d",
+            )?;
 
             // if scheduled_date == today {
             let start_time = NaiveTime::parse_from_str(
