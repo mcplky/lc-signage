@@ -253,7 +253,7 @@ impl LcSignage {
                     .start_date
                     .split_whitespace()
                     .nth(1)
-                    .ok_or("could not read JSON time/date")?,
+                    .ok_or(anyhow!("could not read JSON time/date"))?,
                 "%H:%M:%S",
             )?;
 
@@ -262,7 +262,7 @@ impl LcSignage {
                     .end_date
                     .split_whitespace()
                     .nth(1)
-                    .ok_or("could not split end date string")?,
+                    .ok_or(anyhow!("could not split end date string"))?,
                 "%H:%M:%S",
             )?;
 
