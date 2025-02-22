@@ -11,10 +11,10 @@ use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
 use log::error;
 use oauth2::{
-    basic::{BasicClient, BasicTokenType},
-    curl::http_client,
     AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse,
     TokenUrl,
+    basic::{BasicClient, BasicTokenType},
+    curl::http_client,
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
