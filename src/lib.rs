@@ -70,7 +70,7 @@ struct OutputEvent {
 pub struct ConnectionData {
     oauth_url: String,
     token_url: String,
-    feed_url: String,
+    query_url: String,
     client_id: String,
     client_secret: String,
     access_token: String,
@@ -90,7 +90,7 @@ impl ConnectionData {
         Self {
             oauth_url,
             token_url,
-            feed_url,
+            query_url: feed_url,
             client_id,
             client_secret,
             save_path,
@@ -151,12 +151,9 @@ impl ConnectionData {
             for rm in room_split {
                 room_str = format!("{room_str}&rooms[{rm}]={rm}");
             }
-            format!("{}{}&start=now&end=tomorrow", self.feed_url, room_str)
+            format!("{}{}", self.query_url, room_str)
         } else {
-            format!(
-                "{}?rooms[{}]={}&start=now&end=tomorrow",
-                self.feed_url, room, room
-            )
+            format!("{}?rooms[{}]={}", self.query_url, room, room)
         };
 
         Ok(url)

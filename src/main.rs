@@ -1,5 +1,4 @@
 use std::{
-    path::PathBuf,
     thread::sleep,
     time::{Duration, Instant},
 };
@@ -56,12 +55,16 @@ async fn main() -> Result<()> {
             } else {
                 None
             };
+            let query_start_time = cfg.get_string("start_time").unwrap_or("now".into());
+            let query_end_time = cfg.get_string("end_time").unwrap_or("tomorrow".into());
+
+            let query_url = format!("{feed_url}?start={query_start_time}&end={query_end_time}");
 
             // setup service structs
             let connection = ConnectionData::new(
                 oauth_url,
                 token_url,
-                feed_url,
+                query_url,
                 client_id,
                 client_secret,
                 save_path,
