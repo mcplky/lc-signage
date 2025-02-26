@@ -6,8 +6,8 @@ use std::{
     time::Instant,
 };
 
-use anyhow::Context;
-use chrono::{NaiveDate, NaiveTime};
+use anyhow::{anyhow, Context};
+use chrono::NaiveTime;
 use home::home_dir;
 use log::error;
 use oauth2::{
@@ -244,7 +244,6 @@ impl LcSignage {
     /// The `HashMap` is keyed by the room ID number and is dynamically generated.
     fn generate_room_events(events: Vec<LcEvent>) -> Result<Vec<OutputEvent>> {
         let mut publish_events = vec![];
-        let today = chrono::Local::now().date_naive();
 
         for event in events {
             // if scheduled_date == today {
