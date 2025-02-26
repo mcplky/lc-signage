@@ -4,9 +4,9 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use config::Config;
-use log::{error, info, LevelFilter};
+use log::{LevelFilter, error, info};
 use systemd_journal_logger::JournalLog;
 
 // Type alias for tokio return types
@@ -51,10 +51,9 @@ async fn main() -> Result<()> {
                 .into_iter()
                 .map(|r| r.to_string())
                 .collect();
-            let save_path = if let Ok(path) = cfg.get_string("save_path") {
-                Some(path)
-            } else {
-                None
+            let save_path = match cfg.get_string("save_path") {
+                Ok(path) => Some(path),
+                _ => None,
             };
 
             // setup service structs
