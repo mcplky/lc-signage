@@ -147,13 +147,13 @@ impl ConnectionData {
             let first_room = room_split
                 .next()
                 .context("expected a room number in substring")?;
-            let mut room_str = format!("?rooms[{first_room}]={first_room}");
+            let mut room_str = format!("&rooms[{first_room}]={first_room}");
             for rm in room_split {
                 room_str = format!("{room_str}&rooms[{rm}]={rm}");
             }
             format!("{}{}", self.query_url, room_str)
         } else {
-            format!("{}?rooms[{}]={}", self.query_url, room, room)
+            format!("{}&rooms[{}]={}", self.query_url, room, room)
         };
 
         Ok(url)
