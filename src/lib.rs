@@ -6,8 +6,8 @@ use std::{
     time::Instant,
 };
 
-use anyhow::Context;
-use chrono::{NaiveDate, NaiveTime};
+use anyhow::{anyhow, Context};
+use chrono::NaiveTime;
 use home::home_dir;
 use log::error;
 use oauth2::{
@@ -70,7 +70,7 @@ struct OutputEvent {
 pub struct ConnectionData {
     oauth_url: String,
     token_url: String,
-    feed_url: String,
+    query_url: String,
     client_id: String,
     client_secret: String,
     access_token: String,
@@ -90,7 +90,7 @@ impl ConnectionData {
         Self {
             oauth_url,
             token_url,
-            feed_url,
+            query_url: feed_url,
             client_id,
             client_secret,
             save_path,
@@ -147,13 +147,13 @@ impl ConnectionData {
             let first_room = room_split
                 .next()
                 .context("expected a room number in substring")?;
-            let mut room_str = format!("?rooms[{first_room}]={first_room}");
+            let mut room_str = format!("&rooms[{first_room}]={first_room}");
             for rm in room_split {
                 room_str = format!("{room_str}&rooms[{rm}]={rm}");
             }
-            format!("{}{}", self.feed_url, room_str)
+            format!("{}{}", self.query_url, room_str)
         } else {
-            format!("{}?rooms[{}]={}", self.feed_url, room, room)
+            format!("{}&rooms[{}]={}", self.query_url, room, room)
         };
 
         Ok(url)
@@ -241,49 +241,46 @@ impl LcSignage {
     /// The `HashMap` is keyed by the room ID number and is dynamically generated.
     fn generate_room_events(events: Vec<LcEvent>) -> Result<Vec<OutputEvent>> {
         let mut publish_events = vec![];
-        let today = chrono::Local::now().date_naive();
 
         for event in events {
-            let mut time_str = event.start_date.split_whitespace();
-            let scheduled_date = NaiveDate::parse_from_str(
-                time_str.next().ok_or("could not read JSON time/date")?,
-                "%Y-%m-%d",
+            // if scheduled_date == today {
+            let start_time = NaiveTime::parse_from_str(
+                event
+                    .start_date
+                    .split_whitespace()
+                    .nth(1)
+                    .ok_or(anyhow!("could not read JSON time/date"))?,
+                "%H:%M:%S",
             )?;
 
-            if scheduled_date == today {
-                let start_time = NaiveTime::parse_from_str(
-                    time_str.next().ok_or("could not read JSON time/date")?,
-                    "%H:%M:%S",
-                )?;
+            let end_time = NaiveTime::parse_from_str(
+                event
+                    .end_date
+                    .split_whitespace()
+                    .nth(1)
+                    .ok_or(anyhow!("could not split end date string"))?,
+                "%H:%M:%S",
+            )?;
 
-                let end_time = NaiveTime::parse_from_str(
-                    event
-                        .end_date
-                        .split_whitespace()
-                        .nth(1)
-                        .ok_or("could not split end date string")?,
-                    "%H:%M:%S",
-                )?;
-
-                publish_events.push(OutputEvent {
-                    title: event.title,
-                    public: event.public,
-                    start_time: start_time.format("%l:%M %p").to_string(),
-                    end_time: end_time.format("%l:%M %p").to_string(),
-                    room: event
-                        .room
-                        .as_object()
-                        .unwrap()
-                        .keys()
-                        .next()
-                        .unwrap()
-                        .to_owned(),
-                    id: event.id,
-                    moderation_state: event.moderation_state,
-                });
-            } else {
-                break;
-            }
+            publish_events.push(OutputEvent {
+                title: event.title,
+                public: event.public,
+                start_time: start_time.format("%l:%M %p").to_string(),
+                end_time: end_time.format("%l:%M %p").to_string(),
+                room: event
+                    .room
+                    .as_object()
+                    .unwrap()
+                    .keys()
+                    .next()
+                    .unwrap()
+                    .to_owned(),
+                id: event.id,
+                moderation_state: event.moderation_state,
+            });
+            // } else {
+            //     break;
+            // }
         }
 
         Ok(publish_events)
