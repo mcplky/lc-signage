@@ -11,10 +11,9 @@ use chrono::NaiveTime;
 use home::home_dir;
 use log::error;
 use oauth2::{
-    AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse,
-    TokenUrl,
+    AuthUrl, ClientId, ClientSecret, CurlHttpClient, EmptyExtraTokenFields, StandardTokenResponse,
+    TokenResponse, TokenUrl,
     basic::{BasicClient, BasicTokenType},
-    curl::http_client,
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -125,14 +124,14 @@ impl ConnectionData {
     pub(crate) fn fetch_api_key(
         &self,
     ) -> Result<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>> {
-        let client = BasicClient::new(
-            ClientId::new(self.client_id.clone()),
-            Some(ClientSecret::new(self.client_secret.clone())),
-            AuthUrl::new(self.oauth_url.clone())?,
-            Some(TokenUrl::new(self.token_url.clone())?),
-        );
+        let client = BasicClient::new(ClientId::new(self.client_id.clone()))
+            .set_client_secret(ClientSecret::new(self.client_secret.clone()))
+            .set_auth_uri(AuthUrl::new(self.oauth_url.clone())?)
+            .set_token_uri(TokenUrl::new(self.token_url.clone())?);
 
-        let token_result = client.exchange_client_credentials().request(http_client)?;
+        let token_result = client
+            .exchange_client_credentials()
+            .request(&CurlHttpClient)?;
 
         Ok(token_result)
     }
