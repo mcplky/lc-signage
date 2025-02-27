@@ -105,7 +105,7 @@ async fn main() -> Result<()> {
 
 #[cfg(feature = "cross_platform")]
 fn install_logger() {
-    env_logger::init();
+    env_logger::builder().filter_level(LevelFilter::Info).init();
 }
 
 #[cfg(feature = "systemd")]
