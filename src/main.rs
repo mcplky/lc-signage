@@ -103,15 +103,14 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "cross_platform")]
 fn install_logger() {
-    env_logger::builder().filter_level(LevelFilter::Info).init();
-}
-
-#[cfg(feature = "systemd")]
-fn install_logger() {
-    systemd_journal_logger::JournalLog::new()
-        .unwrap()
-        .install()
-        .unwrap();
+    if cfg!(feature = "cross_platform") && !cfg!(feature = "systemd") {
+        env_logger::builder().filter_level(LevelFilter::Info).init();
+    } else if cfg!(feature = "systemd") {
+        #[cfg(feature = "systemd")]
+        systemd_journal_logger::JournalLog::new()
+            .unwrap()
+            .install()
+            .unwrap();
+    }
 }
