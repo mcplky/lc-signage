@@ -6,7 +6,6 @@ use std::{
 use anyhow::{Context, anyhow};
 use config::Config;
 use log::{LevelFilter, error, info};
-use systemd_journal_logger::JournalLog;
 
 // Type alias for tokio return types
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -23,7 +22,8 @@ use lc_signage::{ConnectionData, LcSignage};
 #[tokio::main]
 async fn main() -> Result<()> {
     // setup systemd journal logging
-    JournalLog::new().unwrap().install().unwrap();
+    install_logger();
+
     log::set_max_level(LevelFilter::Info);
 
     let config_location = home::home_dir().unwrap();
@@ -101,4 +101,16 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn install_logger() {
+    if cfg!(feature = "cross_platform") && !cfg!(feature = "systemd") {
+        env_logger::builder().filter_level(LevelFilter::Info).init();
+    } else if cfg!(feature = "systemd") {
+        #[cfg(feature = "systemd")]
+        systemd_journal_logger::JournalLog::new()
+            .unwrap()
+            .install()
+            .unwrap();
+    }
 }

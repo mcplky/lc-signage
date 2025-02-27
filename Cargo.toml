@@ -13,10 +13,16 @@ oauth2 = { version = "4.4.2", features = ["curl"] }
 anyhow = "1.0.91"
 chrono = "0.4.38"
 home = "0.5.9"
-systemd-journal-logger = "2.2.0"
+systemd-journal-logger = {version = "2.2.0", optional = true}
 log = "0.4.22"
 config = { version = "0.15.0", features = ["toml"] }
 reqwest = {version ="0.12.8", features = ["json"] }
+env_logger = {version = "0.11.6", optional = true}
 
 [lints.clippy]
 pedantic = "warn"
+
+[features]
+default = ["cross_platform"]
+cross_platform = ["env_logger"]
+systemd = ["systemd-journal-logger"]
