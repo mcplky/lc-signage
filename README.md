@@ -100,8 +100,9 @@ The output JSON contains:
 
 * Title
 * Public/Private
-* Start time (in %h:%m %p format)
-* End time (in %h:%m %p)
+* Date (in `%Y-%m-%d` format)
+* Start time (in `%h:%m %p` format)
+* End time (in `%h:%m %p`)
 * Event ID
 * Room
 * Moderation State
