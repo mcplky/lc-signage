@@ -81,7 +81,7 @@ impl ConnectionData {
     pub fn new(
         oauth_url: String,
         token_url: String,
-        feed_url: String,
+        query_url: String,
         client_id: String,
         client_secret: String,
         save_path: Option<String>,
@@ -89,7 +89,7 @@ impl ConnectionData {
         Self {
             oauth_url,
             token_url,
-            query_url: feed_url,
+            query_url,
             client_id,
             client_secret,
             save_path,

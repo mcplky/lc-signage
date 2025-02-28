@@ -50,10 +50,7 @@ async fn main() -> Result<()> {
                 .into_iter()
                 .map(|r| r.to_string())
                 .collect();
-            let save_path = match cfg.get_string("save_path") {
-                Ok(path) => Some(path),
-                _ => None,
-            };
+            let save_path = cfg.get_string("save_path").ok();
             let query_start_time = cfg.get_string("start_time").unwrap_or("now".into());
             let query_end_time = cfg.get_string("end_time").unwrap_or("tomorrow".into());
 
