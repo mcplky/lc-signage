@@ -244,10 +244,8 @@ impl LcSignage {
         let mut publish_events = vec![];
 
         for event in events {
-            // if scheduled_date == today {
-
             let date = NaiveDate::parse_from_str(
-                &event
+                event
                     .start_date
                     .split_whitespace()
                     .nth(0)
@@ -256,7 +254,7 @@ impl LcSignage {
             )?;
 
             let start_time = NaiveTime::parse_from_str(
-                &event
+                event
                     .start_date
                     .split_whitespace()
                     .nth(1)
@@ -265,7 +263,7 @@ impl LcSignage {
             )?;
 
             let end_time = NaiveTime::parse_from_str(
-                &event
+                event
                     .end_date
                     .split_whitespace()
                     .nth(1)
@@ -290,9 +288,6 @@ impl LcSignage {
                 id: event.id,
                 moderation_state: event.moderation_state,
             });
-            // } else {
-            //     break;
-            // }
         }
 
         Ok(publish_events)

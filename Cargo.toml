@@ -21,6 +21,8 @@ env_logger = {version = "0.11.6", optional = true}
 
 [lints.clippy]
 pedantic = "warn"
+perf = "warn"
+complexity = "warn"
 
 [features]
 default = ["cross_platform"]
