@@ -14,17 +14,19 @@ See the subdirectories for additional information on frontend and hardware. All 
 
 ## Installation
 
-`lc-signage` runs on any Linux distribution with `systemd`. `systemd` support is only needed for logging to `journald`. We recommend using a Debian or Ubuntu installation as both of these provide the needed dependencies by default. 
+`lc-signage` runs on any Linux or Windows-based platform with the default configuration of `cross_platform`. If you are running on a Linux distribution with `systemd`, you may wish to enable the `systemd` feature to enable native logging to `journald`. The `env_logger` backend for `cross_platform` will forward its output to `journalctl` if the service is installed as a `systemd` service unit.
 
 Download the current release from the [releases](https://github.com/mcplky/lc-signage/releases/latest) and extract the binary to your desired path. The binary can be run as-is as long as the configuration file is present.
 
 ### Building from source
 
+`cargo run --release` will compile and run the program immediately for testing purposes, as long as `config.toml` exists and is correctly configured.
+
 Install `lc-signage` to your default `cargo` binary directory by invoking `cargo install --path=.`. You may also install to a different path if desired.
 
 ### Systemd Unit Configuration
 
-Running `lc-signage` as a system service enables auto-restart of service in case of failure and lets the service start on login. The `ExecStart` option points to the install path, so make sure it points to your binary.
+Running `lc-signage` as a system service enables auto-restart of service in case of failure and lets the service start on login. The `ExecStart` option points to the install path, so make sure it points to your binary. This step is not necessary but it simplifies deployment.
 
 ```
 [Unit]
@@ -46,6 +48,12 @@ systemctl --user daemon-reload
 systemctl --user enable --now lc-signage.service
 ```
 
+Check the log status by running:
+
+```bash
+journalctl --user -u lc-signage
+```
+
 You will need to ensure that you maintain a login on the server you install this on to run the application.
 
 ## Configuration
@@ -62,8 +70,15 @@ client_id = "<id string>"
 client_secret = "<secret string>"
 # Internal room IDs.
 # Use '+' to separate rooms in the same string if you want their output to be merged in the same JSON result file
-room_keys = ["123", "456", "789+102"] 
-save_path = "<path to output directory>"
+room_keys = ["123", "456", "789+102"]
+# Optional parameter for save location
+# Default is given below
+save_path = "~/.local/share/web/events"
+
+# Optional parameters for date range to pull
+# Default configuration only pulls programs that have an end time between the current time and the end of the current day
+start_time = "now"
+end_time = "tomorrow"
 ```
 
 `save_path` is an optional field; it will overwrite the default save location. Your user needs write permissions on the target output directory. The program will create the directory if it does not exist already.
@@ -81,16 +96,16 @@ Currently `lc-signage` is limited in scope and is designed for our use case. It 
 * Event ID
 * Moderation State
 
-The output JSON contains an even more limited subset:
+The output JSON contains:
 
 * Title
 * Public/Private
-* Start time
-* End time
+* Start time (in %h:%m %p format)
+* End time (in %h:%m %p)
 * Event ID
 * Room
 * Moderation State
 
-The output JSON is stored by default in `~/.local/share/web/events`. If the optional `save_path` value is set in the configuration, that path is used instead.
+The output JSON is stored in the directory specified by `save_path` in the config file.
 
 The service should be compatible as-is with any Library Calendar-based event calendar system. If you require additional functionality please feel free to open an issue on the tracker or make the modification on your local copy.
