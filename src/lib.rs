@@ -214,6 +214,7 @@ impl LcSignage {
                 Ok(ev) => ev,
                 Err(e) => {
                     error!("error encountered in room {}: {:?}", room, e);
+                    response_time += request_start.elapsed().as_secs_f32();
                     continue;
                 }
             };
