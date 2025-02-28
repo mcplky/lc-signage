@@ -28,6 +28,8 @@ Install `lc-signage` to your default `cargo` binary directory by invoking `cargo
 
 Running `lc-signage` as a system service enables auto-restart of service in case of failure and lets the service start on login. The `ExecStart` option points to the install path, so make sure it points to your binary. This step is not necessary but it simplifies deployment.
 
+For an example `lc-signage.service` unit file (located in `~/.config/systemd/user/`):
+
 ```
 [Unit]
 Description=Library Calendar Room Display Service
@@ -54,7 +56,7 @@ Check the log status by running:
 journalctl --user -u lc-signage
 ```
 
-You will need to ensure that you maintain a login on the server you install this on to run the application.
+You will need to ensure that you maintain a login on the server you install this on to run the application, so consider an autologin configuration.
 
 ## Configuration
 
