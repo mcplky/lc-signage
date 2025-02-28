@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{Context, anyhow};
-use chrono::NaiveTime;
+use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
 use log::error;
 use oauth2::{
@@ -56,6 +56,7 @@ struct LcEvent {
 struct OutputEvent {
     title: String,
     public: bool,
+    date: String,
     start_time: String,
     end_time: String,
     id: String,
@@ -243,8 +244,18 @@ impl LcSignage {
 
         for event in events {
             // if scheduled_date == today {
+
+            let date = NaiveDate::parse_from_str(
+                &event
+                    .start_date
+                    .split_whitespace()
+                    .nth(0)
+                    .ok_or(anyhow!("could not get date"))?,
+                "%Y-%m-%d",
+            )?;
+
             let start_time = NaiveTime::parse_from_str(
-                event
+                &event
                     .start_date
                     .split_whitespace()
                     .nth(1)
@@ -253,7 +264,7 @@ impl LcSignage {
             )?;
 
             let end_time = NaiveTime::parse_from_str(
-                event
+                &event
                     .end_date
                     .split_whitespace()
                     .nth(1)
@@ -264,6 +275,7 @@ impl LcSignage {
             publish_events.push(OutputEvent {
                 title: event.title,
                 public: event.public,
+                date: date.format("%Y-%m-%d").to_string(),
                 start_time: start_time.format("%l:%M %p").to_string(),
                 end_time: end_time.format("%l:%M %p").to_string(),
                 room: event
