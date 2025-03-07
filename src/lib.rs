@@ -102,7 +102,7 @@ impl ConnectionData {
     ///
     /// Contact the provided URL to acquire a JSON object, and then return that JSON as a parsed
     /// Rust object as a Vec<LcEvent>.
-    pub(crate) async fn fetch_json(&mut self, room: &str) -> Result<Vec<LcEvent>> {
+    pub(crate) async fn fetch_json(&self, room: &str) -> Result<Vec<LcEvent>> {
         let client = Client::new();
 
         let url = self.make_request(room)?;
@@ -141,7 +141,7 @@ impl ConnectionData {
     ///
     /// Produces the request for the feed JSON with the appropriate authorization token.
     /// Encodes the secret auth token information until it is consumed by `fetch_json`
-    fn make_request(&mut self, room: &str) -> Result<String> {
+    fn make_request(&self, room: &str) -> Result<String> {
         let url = if room.contains('+') {
             let mut room_split = room.split('+');
             let first_room = room_split
