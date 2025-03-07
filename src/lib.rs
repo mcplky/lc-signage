@@ -210,19 +210,19 @@ impl LcSignage {
         for room in &self.room_keys {
             let request_start = Instant::now();
             // in-process error handling to prevent json access issues from breaking a full refresh cycle
-            let received_events = match self.connection.fetch_json(room).await {
-                Ok(ev) => ev,
-                Err(e) => {
-                    error!("error encountered in room {}: {:?}", room, e);
-                    response_time += request_start.elapsed().as_secs_f32();
-                    continue;
-                }
-            };
+            let received_events = self.connection.fetch_json(room).await.unwrap_or_else(|e| {
+                error!("error encountered in room {}: {:?}", room, e);
+                vec![]
+            });
+
             response_time += request_start.elapsed().as_secs_f32();
-            self.processed_events.insert(
-                room.into(),
-                LcSignage::generate_room_events(received_events)?,
-            );
+
+            if !received_events.is_empty() {
+                self.processed_events.insert(
+                    room.into(),
+                    LcSignage::generate_room_events(received_events)?,
+                );
+            }
         }
 
         self.write_output_json()?;
