@@ -89,7 +89,6 @@ jobs:
         run: mv tmp/binary/*'${{ matrix.binary_ext }}' '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
         
       - name: Package app
-        if: ${{ matrix.platform != "windows" }}
         working-directory: tmp/app
         run: zip --recurse-paths '${{ env.package }}' '${{ env.app_package_name }}'
         
