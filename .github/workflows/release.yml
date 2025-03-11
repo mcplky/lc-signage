@@ -96,7 +96,7 @@ jobs:
       - name: Package app (Windows)
         if: ${{ matrix.platform == 'windows' }}
         working-directory: tmp/app
-        run: Compress-Archive -Path '${{ env.PACKAGE_NAME }}' -DestinationPath '${{ env.PACKAGE }}${{ matrix.binary_ext }}'
+        run: Compress-Archive -Path '${{ env.PACKAGE_NAME }}' -DestinationPath '${{ env.PACKAGE }}${{ matrix.package_ext }}'
         
       - name: Upload package to workflow artifacts
         uses: actions/upload-artifact@v4
