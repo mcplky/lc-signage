@@ -82,15 +82,21 @@ jobs:
         run: |
           for target in ${{ matrix.targets}}; do
             cargo build --locked --profile='${{ matrix.profile }}' --target="${target}"
-            mv target/"${target}"/'${{ matrix.profile }}/${{ env.cargo_build_binary_name }}${{ matrix.binary_ext }}' tmp/binary/"${target}"'${{ matrix.binary_ext }}'
+            mv target/"${target}"/'${{ matrix.profile }}/${{ env.app_package_name }}${{ matrix.binary_ext }}' tmp/binary/"${target}"'${{ matrix.binary_ext }}'
           done
           
       - name: Move binaries to app
         run: mv tmp/binary/*'${{ matrix.binary_ext }}' '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
         
       - name: Package app
+        if: ${{ matrix.platform != 'windows' }}
         working-directory: tmp/app
         run: zip --recurse-paths '${{ env.package }}' '${{ env.app_package_name }}'
+
+      - name: Package app (Windows)
+        if: ${{ matrix.platform == 'windows' }}
+        working-directory: tmp/app
+        run: Compress-Archive -Path '${{ env.PACKAGE_NAME }}' -DestinationPath '${{ env.PACKAGE }}${{ matrix.binary_ext }}'
         
       - name: Upload package to workflow artifacts
         uses: actions/upload-artifact@v4
