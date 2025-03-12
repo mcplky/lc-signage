@@ -1,15 +1,13 @@
 use std::{
-    path::PathBuf,
     thread::sleep,
     time::{Duration, Instant},
 };
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use config::Config;
-use log::{error, info, LevelFilter};
-use systemd_journal_logger::JournalLog;
+use log::{LevelFilter, error, info};
 
-// Type alias for tokio return types to handle asynchronous code correctly
+// Type alias for tokio return types
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 use lc_signage::{ConnectionData, LcSignage};
@@ -24,20 +22,15 @@ use lc_signage::{ConnectionData, LcSignage};
 #[tokio::main]
 async fn main() -> Result<()> {
     // setup systemd journal logging
-    JournalLog::new().unwrap().install().unwrap();
+    install_logger();
+
     log::set_max_level(LevelFilter::Info);
 
-    let config_location: PathBuf = [
-        home::home_dir().unwrap(),
-        ".config".into(),
-        "lc-signage".into(),
-        "config.toml".into(),
-    ]
-    .iter()
-    .collect();
+    let config_location = home::home_dir().unwrap();
 
     let cfg = Config::builder().add_source(config::File::with_name(
         config_location
+            .join(".config/lc-signage/config.toml")
             .to_str()
             .ok_or(anyhow!("config file not located"))?,
     ));
@@ -51,29 +44,32 @@ async fn main() -> Result<()> {
             let client_secret = cfg
                 .get_string("client_secret")
                 .context("expected client secret")?;
-            let username = cfg.get_string("username").context("expected username")?;
-            let password = cfg.get_string("password").context("expected password")?;
             let room_keys = cfg
                 .get_array("room_keys")
                 .context("expected room keys")?
                 .into_iter()
                 .map(|r| r.to_string())
                 .collect();
+            let save_path = cfg.get_string("save_path").ok();
+            let query_start_time = cfg.get_string("start_time").unwrap_or("now".into());
+            let query_end_time = cfg.get_string("end_time").unwrap_or("tomorrow".into());
+
+            let query_url = format!("{feed_url}?start={query_start_time}&end={query_end_time}");
 
             // setup service structs
             let connection = ConnectionData::new(
                 oauth_url,
                 token_url,
-                feed_url,
+                query_url,
                 client_id,
                 client_secret,
-                username,
-                password,
+                save_path,
             );
             let mut lc_signage = LcSignage::new(room_keys, connection);
 
             // sleep process in 15 min intervals
-            let interval = Duration::from_secs(900);
+            let sleep_interval = 900;
+            let interval = Duration::from_secs(sleep_interval);
             let mut next_time = Instant::now() + interval;
 
             loop {
@@ -102,4 +98,16 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn install_logger() {
+    if cfg!(feature = "cross_platform") && !cfg!(feature = "systemd") {
+        env_logger::builder().filter_level(LevelFilter::Info).init();
+    } else if cfg!(feature = "systemd") {
+        #[cfg(feature = "systemd")]
+        systemd_journal_logger::JournalLog::new()
+            .unwrap()
+            .install()
+            .unwrap();
+    }
 }

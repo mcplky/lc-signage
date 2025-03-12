@@ -6,21 +6,20 @@ use std::{
     time::Instant,
 };
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use chrono::{NaiveDate, NaiveTime};
 use home::home_dir;
 use log::error;
 use oauth2::{
+    AuthUrl, ClientId, ClientSecret, CurlHttpClient, EmptyExtraTokenFields, StandardTokenResponse,
+    TokenResponse, TokenUrl,
     basic::{BasicClient, BasicTokenType},
-    curl::http_client,
-    AuthUrl, ClientId, ClientSecret, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse,
-    TokenUrl,
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-// Type alias for tokio return types to handle asynchronous code correctly
+// Type alias for tokio return types
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 /// `Token`
@@ -57,6 +56,7 @@ struct LcEvent {
 struct OutputEvent {
     title: String,
     public: bool,
+    date: String,
     start_time: String,
     end_time: String,
     id: String,
@@ -67,16 +67,14 @@ struct OutputEvent {
 /// `ConnectionData`
 ///
 /// Struct for configuration information that is used to build requests.
-#[expect(dead_code)]
 pub struct ConnectionData {
     oauth_url: String,
     token_url: String,
-    feed_url: String,
+    query_url: String,
     client_id: String,
     client_secret: String,
-    username: String,
-    password: String,
     access_token: String,
+    save_path: Option<String>,
 }
 
 impl ConnectionData {
@@ -84,20 +82,18 @@ impl ConnectionData {
     pub fn new(
         oauth_url: String,
         token_url: String,
-        feed_url: String,
+        query_url: String,
         client_id: String,
         client_secret: String,
-        username: String,
-        password: String,
+        save_path: Option<String>,
     ) -> Self {
         Self {
             oauth_url,
             token_url,
-            feed_url,
+            query_url,
             client_id,
             client_secret,
-            username,
-            password,
+            save_path,
             access_token: String::new(),
         }
     }
@@ -106,7 +102,7 @@ impl ConnectionData {
     ///
     /// Contact the provided URL to acquire a JSON object, and then return that JSON as a parsed
     /// Rust object as a Vec<LcEvent>.
-    pub(crate) async fn fetch_json(&mut self, room: &str) -> Result<Vec<LcEvent>> {
+    pub(crate) async fn fetch_json(&self, room: &str) -> Result<Vec<LcEvent>> {
         let client = Client::new();
 
         let url = self.make_request(room)?;
@@ -129,14 +125,14 @@ impl ConnectionData {
     pub(crate) fn fetch_api_key(
         &self,
     ) -> Result<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>> {
-        let client = BasicClient::new(
-            ClientId::new(self.client_id.clone()),
-            Some(ClientSecret::new(self.client_secret.clone())),
-            AuthUrl::new(self.oauth_url.clone())?,
-            Some(TokenUrl::new(self.token_url.clone())?),
-        );
+        let client = BasicClient::new(ClientId::new(self.client_id.clone()))
+            .set_client_secret(ClientSecret::new(self.client_secret.clone()))
+            .set_auth_uri(AuthUrl::new(self.oauth_url.clone())?)
+            .set_token_uri(TokenUrl::new(self.token_url.clone())?);
 
-        let token_result = client.exchange_client_credentials().request(http_client)?;
+        let token_result = client
+            .exchange_client_credentials()
+            .request(&CurlHttpClient)?;
 
         Ok(token_result)
     }
@@ -145,19 +141,19 @@ impl ConnectionData {
     ///
     /// Produces the request for the feed JSON with the appropriate authorization token.
     /// Encodes the secret auth token information until it is consumed by `fetch_json`
-    fn make_request(&mut self, room: &str) -> Result<String> {
+    fn make_request(&self, room: &str) -> Result<String> {
         let url = if room.contains('+') {
             let mut room_split = room.split('+');
             let first_room = room_split
                 .next()
                 .context("expected a room number in substring")?;
-            let mut room_str = format!("?rooms[{first_room}]={first_room}");
+            let mut room_str = format!("&rooms[{first_room}]={first_room}");
             for rm in room_split {
                 room_str = format!("{room_str}&rooms[{rm}]={rm}");
             }
-            format!("{}{}", self.feed_url, room_str)
+            format!("{}{}", self.query_url, room_str)
         } else {
-            format!("{}?rooms[{}]={}", self.feed_url, room, room)
+            format!("{}&rooms[{}]={}", self.query_url, room, room)
         };
 
         Ok(url)
@@ -166,7 +162,8 @@ impl ConnectionData {
 
 /// `LcSignage`
 ///
-/// Core part of the process. `LcSignage` maintains information about
+/// Core part of the process. `LcSignage` maintains information about the connection,
+/// builds out the output data structures, and serializes those to the output directory.
 pub struct LcSignage {
     room_keys: Vec<String>,
     processed_events: HashMap<String, Vec<OutputEvent>>,
@@ -184,8 +181,13 @@ impl LcSignage {
     }
     /// fn `process_events()`
     ///
-    /// core program loop, abstracted from main to enable recoverable error handling
-    /// `room_keys` will need to be modified if a room is to be given a display
+    /// Core program process. Performs the following steps:
+    ///
+    /// - Retrieve OAuth2 API key to access private events.
+    /// - Iterates over the list of rooms, performing a JSON request for each one,
+    ///   processing the output and storing it for serialization.
+    /// - After all rooms are processed, the data is serialized to disk in the output directory.
+    /// - Clears the owned struct for processed events to minimize needed reallocations.
     ///
     /// # Errors
     ///
@@ -193,6 +195,8 @@ impl LcSignage {
     /// server unreachable
     /// JSON incorrect or malformed
     /// unable to parse the JSON to `LcEvent`
+    ///
+    /// If an error occurs in a room, the program skips that room and continues with the remaining rooms.
     pub async fn process_events(&mut self) -> Result<f32> {
         let mut response_time = 0.;
 
@@ -206,18 +210,19 @@ impl LcSignage {
         for room in &self.room_keys {
             let request_start = Instant::now();
             // in-process error handling to prevent json access issues from breaking a full refresh cycle
-            let received_events = match self.connection.fetch_json(room).await {
-                Ok(ev) => ev,
-                Err(e) => {
-                    error!("error encountered in room {}: {:?}", room, e);
-                    continue;
-                }
-            };
+            let received_events = self.connection.fetch_json(room).await.unwrap_or_else(|e| {
+                error!("error encountered in room {}: {:?}", room, e);
+                vec![]
+            });
+
             response_time += request_start.elapsed().as_secs_f32();
-            self.processed_events.insert(
-                room.into(),
-                LcSignage::generate_room_events(received_events)?,
-            );
+
+            if !received_events.is_empty() {
+                self.processed_events.insert(
+                    room.into(),
+                    LcSignage::generate_room_events(received_events)?,
+                );
+            }
         }
 
         self.write_output_json()?;
@@ -237,49 +242,52 @@ impl LcSignage {
     /// The `HashMap` is keyed by the room ID number and is dynamically generated.
     fn generate_room_events(events: Vec<LcEvent>) -> Result<Vec<OutputEvent>> {
         let mut publish_events = vec![];
-        let today = chrono::Local::now().date_naive();
 
         for event in events {
-            let mut time_str = event.start_date.split_whitespace();
-            let scheduled_date = NaiveDate::parse_from_str(
-                time_str.next().ok_or("could not read JSON time/date")?,
+            let date = NaiveDate::parse_from_str(
+                event
+                    .start_date
+                    .split_whitespace()
+                    .nth(0)
+                    .ok_or(anyhow!("could not get date"))?,
                 "%Y-%m-%d",
             )?;
 
-            if scheduled_date == today {
-                let start_time = NaiveTime::parse_from_str(
-                    time_str.next().ok_or("could not read JSON time/date")?,
-                    "%H:%M:%S",
-                )?;
+            let start_time = NaiveTime::parse_from_str(
+                event
+                    .start_date
+                    .split_whitespace()
+                    .nth(1)
+                    .ok_or(anyhow!("could not read JSON time/date"))?,
+                "%H:%M:%S",
+            )?;
 
-                let end_time = NaiveTime::parse_from_str(
-                    event
-                        .end_date
-                        .split_whitespace()
-                        .nth(1)
-                        .ok_or("could not split end date string")?,
-                    "%H:%M:%S",
-                )?;
+            let end_time = NaiveTime::parse_from_str(
+                event
+                    .end_date
+                    .split_whitespace()
+                    .nth(1)
+                    .ok_or(anyhow!("could not split end date string"))?,
+                "%H:%M:%S",
+            )?;
 
-                publish_events.push(OutputEvent {
-                    title: event.title,
-                    public: event.public,
-                    start_time: start_time.format("%l:%M %p").to_string(),
-                    end_time: end_time.format("%l:%M %p").to_string(),
-                    room: event
-                        .room
-                        .as_object()
-                        .unwrap()
-                        .keys()
-                        .next()
-                        .unwrap()
-                        .to_owned(),
-                    id: event.id,
-                    moderation_state: event.moderation_state,
-                });
-            } else {
-                break;
-            }
+            publish_events.push(OutputEvent {
+                title: event.title,
+                public: event.public,
+                date: date.format("%Y-%m-%d").to_string(),
+                start_time: start_time.format("%l:%M %p").to_string(),
+                end_time: end_time.format("%l:%M %p").to_string(),
+                room: event
+                    .room
+                    .as_object()
+                    .unwrap()
+                    .keys()
+                    .next()
+                    .unwrap()
+                    .to_owned(),
+                id: event.id,
+                moderation_state: event.moderation_state,
+            });
         }
 
         Ok(publish_events)
@@ -293,38 +301,26 @@ impl LcSignage {
     ///
     /// The `HashMap` is converted to an iterator; we currently are not using key-based lookups
     fn write_output_json(&self) -> Result<()> {
-        let folder_path: PathBuf = [
-            home_dir().ok_or("could not find home directory")?,
-            ".local".into(),
-            "share".into(),
-            "web".into(),
-            "events".into(),
-        ]
-        .iter()
-        .collect();
+        let save_path: PathBuf = if self.connection.save_path.is_some() {
+            self.connection.save_path.as_ref().unwrap().into()
+        } else {
+            let path = home_dir().ok_or("could not find home directory")?;
+            path.join(".local/share/web/events")
+        };
 
-        if !folder_path.exists() {
-            fs::create_dir_all(folder_path)?;
+        if !save_path.exists() {
+            fs::create_dir_all(&save_path)?;
         }
 
         for room in &self.room_keys {
-            let save_path: PathBuf = [
-                home_dir().ok_or("could not find home directory")?,
-                ".local".into(),
-                "share".into(),
-                "web".into(),
-                "events".into(),
-                format!("{room}.json").into(),
-            ]
-            .iter()
-            .collect();
+            let room_save_path = save_path.join(format!("{room}.json"));
 
             let mut save = File::options()
                 .read(false)
                 .write(true)
                 .create(true)
                 .truncate(true)
-                .open(save_path)?;
+                .open(room_save_path)?;
 
             let json = if self.processed_events.contains_key(&room.to_string()) {
                 serde_json::to_string(self.processed_events.get(&room.to_string()).unwrap())?
