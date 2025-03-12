@@ -86,7 +86,7 @@ jobs:
           done
           
       - name: Move binaries to app
-        run: mv tmp/binary/*'${{ matrix.binary_ext }}' '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
+        run: mv 'tmp/binary/*${{ matrix.binary_ext }}' '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
         
       - name: Package app
         if: ${{ matrix.platform != 'windows' }}
