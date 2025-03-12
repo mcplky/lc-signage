@@ -95,7 +95,6 @@ jobs:
 
       - name: Package app (Windows)
         if: ${{ matrix.platform == 'windows' }}
-        working-directory: tmp/app
         shell: pwsh
         run: Compress-Archive -Path '${{ env.app }}' -DestinationPath '${{ env.package }}'
         
