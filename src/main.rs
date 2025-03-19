@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
                             total_time - r
                         );
                     }
-                    Err(e) => error!("error encountered: {:?}", e),
+                    Err(e) => error!("error encountered: {}", e),
                 }
 
                 sleep(next_time - Instant::now());
