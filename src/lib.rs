@@ -326,7 +326,7 @@ impl LcSignage {
                 serde_json::to_string(self.processed_events.get(&room.to_string()).unwrap())?
                     .to_string()
             } else {
-                String::new()
+                "{[]}".into()
             };
 
             write!(save, "{json}")?;
