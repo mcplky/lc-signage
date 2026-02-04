@@ -17,7 +17,7 @@ use oauth2::{
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 // Type alias for tokio return types
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -61,6 +61,7 @@ struct OutputEvent {
     end_time: String,
     id: String,
     room: String,
+    room_name: String,
     moderation_state: String,
 }
 
@@ -271,20 +272,28 @@ impl LcSignage {
                 "%H:%M:%S",
             )?;
 
+            let room = event
+                .room
+                .as_object()
+                .unwrap()
+                .keys()
+                .next()
+                .unwrap()
+                .to_owned();
+
+            let Value::Object(room_obj) = event.room else {
+                return Err(anyhow!("room was not a JSON Object").into());
+            };
+            let room_name = room_obj.get(&room).unwrap().as_str().unwrap().to_string();
+
             publish_events.push(OutputEvent {
                 title: event.title,
                 public: event.public,
                 date: date.format("%Y-%m-%d").to_string(),
                 start_time: start_time.format("%l:%M %p").to_string(),
                 end_time: end_time.format("%l:%M %p").to_string(),
-                room: event
-                    .room
-                    .as_object()
-                    .unwrap()
-                    .keys()
-                    .next()
-                    .unwrap()
-                    .to_owned(),
+                room,
+                room_name,
                 id: event.id,
                 moderation_state: event.moderation_state,
             });
@@ -326,7 +335,7 @@ impl LcSignage {
                 serde_json::to_string(self.processed_events.get(&room.to_string()).unwrap())?
                     .to_string()
             } else {
-                String::new()
+                "{[]}".into()
             };
 
             write!(save, "{json}")?;
